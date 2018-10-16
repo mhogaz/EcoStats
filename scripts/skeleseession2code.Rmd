@@ -1,0 +1,134 @@
+
+---
+title: "Learning Stats with R"
+author: "Lily Tomkovic via Nick Rosenberger"
+output:
+  pdf_document: 
+    fig_caption: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.pos= "h")
+```
+# Getting into it - FREQUENTIST STATISTICS ----
+Every observation is independent
+
+## Normal distribution has a "Bell Curve" ----
+The measured dependent variable is continuous ()
+The variaance in the data = the mean (even matching tails)
+- variance = square of standard deviation ("Spread" of distribution)
+
+## Population v. Sample ----
+Population: entire possible number of X (subjects) to be sampled
+Sample: the X you can actually measure
+
+## Random samples
+biasing the selection can influence/skew the observed metrics
+always try for random sample!
+
+## Linear Regression
+only used with normally distributed data
+DEPENDENT VARIABLE: continuous (normal distribution assumption), height etc.
+INDEPENDENT: also continuous
+test if relation between independent and dependent variables
+$$Y=m*x+b$$ ~ Y is the mean prediction
+
+## T-Test
+DEPENDENT=continuous
+INDEPENDENT=non-continuous/factor (2 levels) ex: Individual in Davis v. Individual NOT in Davis
+Tests whether there is a difference between means of both factors
+In order for test to be valid, the variances in both factors should be 'nearly identical"
+
+## ANOVA
+Used when you have normally distributed data
+DEPENDENT variable si continuous (normal dist)
+INDEPENDENT: Factor (3+ levels)
+Tests if there's a difference between means of the three factors
+
+## Bernoulli Trials
+measure probability by testing binomial outcomes
+probability might be weighted
+
+## P-Value
+Significance: expecting observations in the bell part of the curve. P-Value is the probability of an oberved result assuming the null hypothesis is true. So, are the unlikely tails likely or not?
+How much of what you're seeing is probably reality? P-value=0.05 means 95% probability the distribution you're seeing is reality.
+
+# Code!
+
+## Linear Regression Example
+Import lmtest - use the lm() function - use ?lm to see what it needs
+```{r echo=TRUE, out.extra=""}
+# ?lm
+```
+
+## Run a Linear Regression
+Use lmtest data!
+```{r echo=TRUE, out.extra=""}
+library(car)
+lmtest <- read.csv("lmtest.csv")
+lr <- lm(lmtest$Temperature ~ lmtest$Elevation)
+# OR: lm(Temperature~Elevation, data=lmtest)
+summary(lr)
+anova(lr)
+```
+### Explanation of Summary Output
+
+Coefficients:
+                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)      80.3443809  4.6322654  17.345  < 2e-16 ***
+
+Where if std.Error > Estimate (Intercept) then it's a bad/unreliable intercept.
+Asterisks indicate significance.
+
+```{r echo=TRUE, out.extra=""}
+plot(lmtest$Temperature~lmtest$Elevation)
+abline(lr) # Add the linear regression line to the plot object
+```
+
+## Test on a random dataset
+Make a data frame with 1 column with 20 random continous numbers and another column that is one factor for the first 10 and another factor for the second 10
+```{r echo=TRUE, out.extra=""}
+df <- data.frame(rand.cont=runif(20, min=0, max=100), fact=NA)
+df$fact[1:10] <- "Lady.Gupplington"
+df$fact[11:20] <- "Luna.B.Bearington"
+tt.df <- t.test(rand.cont~fact, data=df)
+print(tt.df)
+```
+
+## Testing it with ANOVA
+ANOVA is estimating the intercepts of different factors individually.
+It's a linear model but instead of regressing a continuous independent variable, you're looking at factors, estimating a modified intercept.
+
+When estimating the mean for california:
+$$Elevation = ((m_{Utah}\cdot 0 )+(m_{Montana}\cdot 0)+(m_{California}*0))\cdot x+b$$
+You'll end up with:
+$$Elevation =m_{California}x+b$$
+### ANOVA Example
+Consider the difference between states. Load the car package.
+Type=2 means there's no interaction bewteen variables.
+```{r echo=TRUE, out.extra=""}
+# install.packages("car")
+# install.packages("lsmeans")
+library(car)
+library(lsmeans)
+
+anv <- lm(Elevation~Location, data=lmtest)
+
+anvtest <- Anova(anv, type=2) # From car package
+print(anvtest)
+
+lsmanv <- lsmeans(anv, ~Location) # From lsmeans package
+print(lsmanv)
+plot(lsmanv)
+```
+
+Where "lsmean"" is the average elevation at each location. "lower.CL" and "upper.CL" are the lower and upper confidence intervals. For each location.
+
+## Testing for Normal Distribution
+Is our "Real" data actually normally distributed? use hist() to plot dependent variable
+```{r echo=TRUE, out.extra=""}
+hist(lmtest$Temperature)
+hist(lmtest$Elevation)
+lm.cal <- lmtest[which(lmtest$Location=="California"),]
+hist(lm.cal$Temperature)
+```
