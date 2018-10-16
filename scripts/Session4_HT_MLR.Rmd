@@ -1,0 +1,54 @@
+---
+title: "Hypotheses and MLR"
+author: "Lily Tomkovic via Nick Rosenberger"
+output:
+  pdf_document: 
+    fig_caption: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.pos= "h")
+#setwd("~/GitHub/EcoStats")
+```
+
+# Introduction
+A fisheries biologist is assessing the effects of mercury on contamination and performance of rainbow trout in small lakes in south-central British Columbia. Based on previous studies, she recognizes that mercury has diverse effects, which she is interested in studying.  In particular, she intends to assess the following possible effects:  
+
+1. As the main organ of detoxification, the liver is involved in extracting mercury from the blood, and fish from lakes with high mercury concentrations are expected to have enlarged livers.  Of course, liver mass is also expected to vary positively with fish size.  
+2. If the liver is not completely effective, then mercury should accumulate in other fish tissues.  Such bioaccumulation may also depend on the mercury concentration in the water and a fish’s size (large fish pass more water over their gills to acquire needed oxygen).  
+3. The physiological effects of mercury, including the cost of removing it from the blood, may reduce a fish’s growth capacity.  Of course, growth capacity at any age is also expected to vary with a fish’s current size (positive) and the population density (negative because of intraspecific competition).  
+
+To test these expectations, the biologist samples water and fish from 35 lakes.  For each lake she measures the mercury concentration in the water (waterconc: $\mu g/L$). She also collects a sample of 20 two-year-old fish from each lake that were individually tagged when they were stocked during the previous year.  For each fish she measures body mass during the preceding year (fishmass: g), liver mass (liver: g), growth since the previous year (growth: g), and the tissue mercury concentration (fishconc: parts per million).  She uses the averages for the fish from a given lake as the single observation for that lake.  Finally, for each lake she conducts a netting survey to quantify the average fish density per lake (fish per cubic metre). The resulting data can be found in **"mercury.txt"** on the D2L site.  
+
+```{r echo=FALSE, results = 'asis', message=F, warning=F}
+# message=F and warning=F suppress the library warnings and messages
+library(car)  # includes vif
+library(knitr) # for kable (below)
+
+df <- read.table('../data/mercury.txt',sep="", header=TRUE)
+
+kable(head(df), caption="\\label{tab:mercury}Example of the data collected for mercury testing in lakes.")
+```
+
+Using these data conduct three sets of analyses. For each set of analyses, consider all possible first-order regression models (with intercepts).  Based on your results, answer the following question:  
+
+**For each analysis do the results of the simple regressions agree with those of the multiple regression?  If not, explain the difference.**  
+
+# Work through code here
+
+a) the effects of fish size and water mercury concentration on liver mass;  
+```{r echo=TRUE, results = 'asis', message=F, warning=F}
+library(car)  # includes vif
+
+df <- read.table('../data/mercury.txt',sep="", header=TRUE)
+```
+
+b) the effects of fish size, liver mass and water mercury concentration on the mercury concentration in fish tissue; and  
+```{r echo=TRUE, results = 'asis', message=F, warning=F}
+
+```
+
+c) the effects of fish size, fish density and water mercury concentration on fish growth.  
+```{r echo=TRUE, results = 'asis', message=F, warning=F}
+
+```
