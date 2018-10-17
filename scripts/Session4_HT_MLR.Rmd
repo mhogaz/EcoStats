@@ -10,8 +10,67 @@ output:
 knitr::opts_chunk$set(echo = TRUE, fig.pos= "h")
 #setwd("~/GitHub/EcoStats")
 ```
+# "Lecture"
 
-# Introduction
+## Linear models and categorical indeendent variables
+
+## Examples:
+$$\mu = \beta_0 + \beta_1 \chi_1 + \beta_2 \chi_2$$
+Where $\beta_j$ is a partial correlation coefficient. You can end up with fun multiple level ANOVA analyses.
+
+### Take-Home Message
+Two key questions:  
+
+1. What are the dependent and independent variables?
+
+2. What distribution is appropriate for the dependent variable?  
+
+* characteristics of a linear model (slope veruss partial regression coefficient)
+* construction and use of dummy variables to represeent categorical independent variables in linear models
+* the diversity of relations between dependent and independent variables that can be represented by linear models.
+
+## Hypothesis Testing for Linear Models
+$$sampling~error=sample~statistic-population~parameter$$
+
+Approaches to statistical inference:  
+1. Frequentist  
+2. Information Theory  
+3. Bayseian  
+
+### Frequentist Hypothesis Testing
+Test statistic measures "effect" ($t, F, \chi^2, etc$), and is subject to sampling error.
+You can make conclusions about your data that are 'wrong' for a few different reasons: 
+
+* **Type I** Failing to detect significant effects  
+
+* **Type II** I am saying there's a significant effect (I reject the null hypothesis) when there's not  
+
+In frequentist statistics, at the end, you'll either:
+* accept $H_0$ - independent variable(s) **does not** have a *statistically significant effect* on the dependent variable  
+* reject $H_0$ - excluded independent variable(s) **does** have a *statistically significant effect* on the dependent variable  
+
+## Information Theory Approach
+
+You can use all of the parameters of interest (the "full model") or a "reduced" model which uses only the independent variables of interest. Which is the best fitting model?
+$$Fit(full)-Fit(reduced)=contribution~of~omitted~variable(s)$$
+
+$$v_{full} - v_{reduced} = df_{test}$$
+Example:  
+
+* Full Model: $\mu_i = \beta_0 + \beta_1 \chi_1 + \beta_2 \chi_2$
+* Reduced Model: $\mu_i = \beta_0$  
+
+Your full model may give you a good fit, but sometimes you might want to only include significant variables.
+
+To test for multiple models, you can do a maximum likelihood parameter estimates via:
+$$G=2(LL_{full}-LL_{reduced})$$
+
+**Aikake's Information Criterion**
+$$AIC=-2 lnL(b) + 2v$$
+All the data is the same across the models in order to perform AIC analysis. $b$ is the set of maximum-likelihood estimates of all parameters of a specific model. $L(b)$ is model likelihood. A smaller $AIC$ is better. This compares across the full v. nested as well as the nested amongst themselves. It *is* possible at the end of an AIC that there is no "best-fitting" model identified. There are further methods to identify which models to retain and consider. See Richards (2005, Ecology 86:2805-2814) and Richards (2008, Journal of Applied Ecology 45:218-227).
+
+\newpage
+# Introduction to the Problem Set
 A fisheries biologist is assessing the effects of mercury on contamination and performance of rainbow trout in small lakes in south-central British Columbia. Based on previous studies, she recognizes that mercury has diverse effects, which she is interested in studying.  In particular, she intends to assess the following possible effects:  
 
 1. As the main organ of detoxification, the liver is involved in extracting mercury from the blood, and fish from lakes with high mercury concentrations are expected to have enlarged livers.  Of course, liver mass is also expected to vary positively with fish size.  
@@ -34,21 +93,68 @@ Using these data conduct three sets of analyses. For each set of analyses, consi
 
 **For each analysis do the results of the simple regressions agree with those of the multiple regression?  If not, explain the difference.**  
 
-# Work through code here
+## Work through code here
 
-a) the effects of fish size and water mercury concentration on liver mass;  
-```{r echo=TRUE, results = 'asis', message=F, warning=F}
+a. the effects of fish size and water mercury concentration on liver mass;  
+```{r echo=TRUE, message=F, warning=F}
+# Import car library for regression analysis
+# install.packages("car") # Only necessary if package is not installed
 library(car)  # includes vif
 
 df <- read.table('../data/mercury.txt',sep="", header=TRUE)
+
+# Create linear models
+liv <- lm(liver~fishmass+waterconc, data=df) # How does liver size vary with fishmass and waterconc
+summary(liv)
+# Note that the "Estimate" is relative to the variable scale, so even though fishmass has a much lower estimate than waterconc, doesn't mean it's less significant than the waterconc.
+
+liv.mass <- lm(liver~fishmass, data=df)
+liv.wc <- lm(liver~waterconc, data=df)
+summary(liv.mass)
+summary(liv.wc)
+plot(df$liver~df$fishmass)
+abline(liv.mass)
+
+# Perform AIC
+AIC(liv, liv.mass, liv.wc)
+# The more negative, the better fit!
 ```
 
-b) the effects of fish size, liver mass and water mercury concentration on the mercury concentration in fish tissue; and  
-```{r echo=TRUE, results = 'asis', message=F, warning=F}
+b. the effects of fish size, liver mass and water mercury concentration on the mercury concentration in fish tissue; and  
+```{r echo=TRUE, message=F, warning=F}
+# Create linear models
+mtis <- lm(fishconc~fishmass+liver+waterconc, data=df)
+mtis.mass.liv <- lm(fishconc~fishmass+liver, data=df)
+mtis.mass.wc <- lm(fishconc~fishmass+waterconc, data=df)
+mtis.liv.wc <- lm(fishconc~liver+waterconc, data=df)
+mtis.mass <- lm(fishconc~fishmass, data=df)
+mtis.liv <- lm(fishconc~liver, data=df)
+mtis.wc <- lm(fishconc~waterconc, data=df)
+
+AIC(mtis, mtis.mass.liv, mtis.mass.wc, mtis.liv.wc, mtis.mass, mtis.liv, mtis.wc)
+```
+The full model is the best fitting (i.e. lowest AIC) and the next best is within 6 from AIC so we need to consider it. In this case, that's mtis and mtis.mass.wc.
+```{r echo=TRUE, message=F, warning=F}
+summary(mtis)
+summary(mtis.mass.wc)
+```
+
+So here, even though liver is *insignificant* in the full model, it aids in the fit of the overall model. The estimate of the coefficient in the full model for fishmass was 0.040905 and for the reduced model it is 0.030892. For waterconc it's 29.799430 in the full model and 20.544033 in the reduced. For both parameter estimates, the impact is greater or more significant if liver is included in the model.  
+One could conclude fish mass and water concentration are increasing the amount of mercury in the fish, and once we've accounted for the liver size, that effect is more profound. That also means that the liver size has no bearing on the amount of mercury in the fish' tissue.  
+
+c. the effects of fish size, fish density and water mercury concentration on fish growth.  
+```{r echo=TRUE, message=F, warning=F}
+# Create linear models
+fgr <- lm(growth~fishmass+fishdens+waterconc, data=df)
+fgr.mass.dens <- lm(growth~fishmass+fishdens, data=df)
+fgr.dens.wc <- lm(growth~fishdens+waterconc, data=df)
+fgr.mass.wc <- lm(growth~fishmass+waterconc, data=df)
+fgr.mass <- lm(growth~fishmass, data=df)
+fgr.dens <- lm(growth~fishdens, data=df)
+fgr.wc <- lm(growth~waterconc, data=df)
+
+AIC(fgr, fgr.mass.dens, fgr.dens.wc, fgr.mass.wc, fgr.mass, fgr.dens, fgr.wc)
 
 ```
 
-c) the effects of fish size, fish density and water mercury concentration on fish growth.  
-```{r echo=TRUE, results = 'asis', message=F, warning=F}
-
-```
+In this case the smallest AIC is fgr.mass.wc and even though the full model is within 6 AIC of it, we needn't consider the full model. Yay science!
